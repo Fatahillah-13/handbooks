@@ -125,7 +125,7 @@ Akses publik hanya untuk melihat konten, sedangkan login internal dikelola oleh 
 ## 📜 Lisensi
 
 Proyek ini bersifat **internal dan tidak untuk distribusi publik**.  
-Hak cipta © 2025 — [Nama Perusahaan / Tim Pengembang].
+Hak cipta © 2025 — Fatahillah Abid A.
 
 ---
 
