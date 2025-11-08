@@ -1,59 +1,132 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🧭 Bintex Archive — Sistem Arsip Flipbook Bergaya RPG Pixel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sebuah aplikasi internal berbasis **Laravel + Vue 3** untuk mengelola dan menampilkan dokumen PDF sebagai **flipbook interaktif** bergaya **RPG klasik / pixelated**.  
+Akses publik hanya untuk melihat konten, sedangkan login internal dikelola oleh admin.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+-   🌍 **Publik & Internal**
+    -   Publik dapat mengakses tampilan situs (flipbook viewer).
+    -   Login internal (username/password dibuat oleh admin).
+-   🧱 **Struktur Konten Hirarkis**
+    -   **Storage** → **Bintex** → **Dokumen (PDF)**
+    -   Mendukung CRUD tanpa batas untuk setiap level.
+-   📖 **Flipbook Viewer**
+    -   PDF ditampilkan sebagai efek membalik halaman (flipbook interaktif).
+    -   Render berbasis **gambar halaman**, bukan file PDF asli.
+-   🔒 **Keamanan Dokumen**
+    -   File PDF tidak bisa diunduh langsung.
+    -   Server-side rendering memastikan user hanya melihat hasil konversi gambar.
+-   🎨 **Tema Visual**
+    -   Desain bergaya **RPG klasik** dengan **pixel font**, spritesheet UI, dan efek retro.
+-   ⚙️ **Manajemen Hak Akses**
+    -   Role-based access control: admin, editor, user, dan lainnya.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🧩 Arsitektur Teknis
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 🖥️ Backend — Laravel
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+-   **Autentikasi:**  
+    Menggunakan **JWT** atau **Laravel Sanctum** untuk mendukung mode SPA.
+-   **API CRUD:**  
+    Endpoint untuk:
+    -   Storage
+    -   Bintex
+    -   Document
+    -   Page (hasil konversi PDF)
+-   **File Handling & Security:**
+    -   PDF disimpan di **private storage** (tidak bisa diakses via URL publik).
+    -   Gambar halaman dilayani melalui endpoint dengan **signed/expiring URLs**.
+-   **Job Queue:**
+    -   Saat admin mengunggah PDF → sistem menjalankan **job queue** untuk:
+        -   Konversi PDF → urutan gambar (per halaman)
+        -   Penambahan watermark opsional
+    -   Menggunakan **Laravel Queue** (Redis atau Database driver).
+-   **Worker & Tools:**
+    -   Menggunakan **Imagick** atau **Poppler (`pdftoppm`)** untuk konversi PDF.
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 🖼️ Frontend — Vue 3 (Composition API)
 
-### Premium Partners
+-   **Home Page:**  
+    Menampilkan daftar **Storage** dalam tampilan pixel art seperti lemari.
+-   **Storage Page:**  
+    Menampilkan **Bintex** (folder koleksi) sebagai kartu visual.
+-   **Viewer Page:**  
+    Komponen flipbook yang menampilkan urutan gambar halaman.
+-   **UI Design:**
+    -   Font pixelated
+    -   CSS dengan nearest-neighbor scaling
+    -   Spritesheet UI untuk nuansa RPG klasik
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+### 🗄️ Database — MySQL
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Tabel       | Deskripsi                                             |
+| ----------- | ----------------------------------------------------- |
+| `users`     | Data pengguna dan peran                               |
+| `roles`     | Hak akses dan izin                                    |
+| `storages`  | Lemari / tempat koleksi utama                         |
+| `bintexes`  | Folder atau koleksi dalam storage                     |
+| `documents` | Metadata PDF                                          |
+| `pages`     | Hasil konversi per halaman (image path, urutan, dsb.) |
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### ⚙️ Queue & Background Process
 
-## Security Vulnerabilities
+-   **Antrian (Queue):** Menggunakan Redis atau Database.
+-   **Worker:** Menangani tugas berat seperti:
+    -   Konversi PDF ke image sequence.
+    -   Penyimpanan & watermark.
+-   **Keamanan File:** PDF asli tidak pernah dilayani langsung.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 🔐 Keamanan
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+-   HTTPS diaktifkan untuk semua koneksi.
+-   Proteksi **CSRF** & **rate limiting** di endpoint penting.
+-   File PDF tersimpan privat.
+-   Signed URL untuk akses sementara pada gambar.
+-   Role-based access control untuk dashboard & API.
+
+---
+
+## 🚀 Tech Stack
+
+| Komponen          | Teknologi                       |
+| ----------------- | ------------------------------- |
+| **Backend**       | Laravel 10+                     |
+| **Frontend**      | Vue 3 (Composition API)         |
+| **Database**      | MySQL                           |
+| **Queue**         | Redis / Database                |
+| **PDF Converter** | Imagick / Poppler               |
+| **Deployment**    | Self-hosted (server perusahaan) |
+
+---
+
+## 🧰 Rencana Pengembangan
+
+-   [ ] Implementasi sistem peran (RBAC)
+-   [ ] Flipbook rendering dengan caching gambar
+-   [ ] Mode gelap (dark theme) untuk UI pixel
+-   [ ] Watermark dinamis per user (opsional)
+-   [ ] Dashboard admin untuk pengelolaan Storage / Bintex / Dokumen
+
+---
+
+## 📜 Lisensi
+
+Proyek ini bersifat **internal dan tidak untuk distribusi publik**.  
+Hak cipta © 2025 — [Nama Perusahaan / Tim Pengembang].
+
+---
+
+> 🕹️ _"Membuka dokumen seolah membuka buku sihir dalam dunia RPG pixelated — aman, indah, dan imersif."_
