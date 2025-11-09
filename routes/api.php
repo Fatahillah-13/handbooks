@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Admin\UserController;
+use App\Http\Controllers\Api\Admin\Content\StorageController;
+use App\Http\Controllers\Api\Admin\Content\BintexController;
+use App\Http\Controllers\Api\Admin\Content\DocumentController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -14,6 +17,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('check.role:admin')->prefix('admin')->group(function () {
         Route::apiResource('users', UserController::class);
         // nanti tambahkan admin endpoints lain (storages, bintex, etc)
+    });
+
+    Route::middleware('check.role:admin|editor')->prefix('admin')->group(function () {
+        Route::apiResource('storages', StorageController::class);
+        Route::apiResource('bintexes', BintexController::class);
+        Route::apiResource('documents', DocumentController::class)->except(['store']);
     });
 
     // contoh route untuk editor/editor+admin
