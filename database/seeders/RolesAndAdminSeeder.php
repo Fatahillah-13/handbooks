@@ -15,25 +15,34 @@ class RolesAndAdminSeeder extends Seeder
      */
     public function run(): void
     {
+        // Pastikan role terbuat / ter-update
         $roles = [
-            ['name' => 'admin', 'label' => 'Administrator'],
+            ['name' => 'admin',  'label' => 'Administrator'],
             ['name' => 'editor', 'label' => 'Editor'],
             ['name' => 'viewer', 'label' => 'Viewer'],
         ];
+
         foreach ($roles as $r) {
-            Role::firstOrCreate(['name' => $r['name']], $r);
+            Role::updateOrCreate(['name' => $r['name']], $r);
         }
 
-        // Buat user admin default (username: admin)
-        if (!User::where('username', 'admin')->exists()) {
-            $adminRole = Role::where('name', 'admin')->first();
-            User::create([
-                'name' => 'Super Admin',
-                'username' => 'admin',
-                'email' => 'admin@example.com',
-                'password' => Hash::make('ChangeMe123!'), // ubah setelah setup
-                'role_id' => $adminRole->id
-            ]);
+        // Buat / perbarui user admin (username: admin)
+        $adminRole = Role::where('name', 'admin')->first();
+
+        $admin = User::firstOrNew(['username' => 'admin']); // kunci unik
+        $admin->fill([
+            'name'    => 'Super Admin',
+            'email'   => 'admin@example.com',
+            'role_id' => $adminRole?->id,
+            // opsional: 'email_verified_at' => now(),
+        ]);
+
+        $plain = 'ChangeMe123!'; // bisa ambil dari env('ADMIN_PASSWORD', 'ChangeMe123!')
+        // Set password hanya jika user baru atau password sekarang tidak sama dengan yang diinginkan
+        if (!$admin->exists || !Hash::check($plain, (string) $admin->password)) {
+            $admin->password = Hash::make($plain);
         }
+
+        $admin->save();
     }
 }
