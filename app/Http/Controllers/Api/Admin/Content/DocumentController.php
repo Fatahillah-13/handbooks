@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\Admin\Content;
 
 use App\Http\Controllers\Controller;
-use App\Models\Document;
+use App\Models\{Document, Page};
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Jobs\ConvertPdfToImages;
 
 class DocumentController extends Controller
 {
@@ -21,7 +23,38 @@ class DocumentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'bintex_id' => 'required|exists:bintexes,id',
+            'title' => 'required|string|max:255',
+            'file' => 'required|mimes:pdf|max:20480', // max 20MB
+        ]);
+
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $fileName = time() . '_' . Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.pdf';
+
+        // Simpan file di storage privat
+        $path = $file->storeAs('private/pdfs', $fileName);
+
+        // Buat record dokumen
+        $document = Document::create([
+            'bintex_id' => $request->bintex_id,
+            'title' => $request->title,
+            'filename_original' => $originalName,
+            'file_path_private' => $path,
+            'page_count' => 0,
+            'is_published' => false,
+            'allow_download' => false,
+            'created_by' => $request->user()->id,
+        ]);
+
+        // Dispatch job konversi PDF → gambar
+        ConvertPdfToImages::dispatch($document);
+
+        return response()->json([
+            'message' => 'Upload berhasil, file sedang dikonversi...',
+            'document' => $document
+        ]);
     }
 
     /**

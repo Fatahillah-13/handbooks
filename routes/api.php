@@ -6,8 +6,10 @@ use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\Admin\Content\StorageController;
 use App\Http\Controllers\Api\Admin\Content\BintexController;
 use App\Http\Controllers\Api\Admin\Content\DocumentController;
+use App\Http\Controllers\Api\Public\ViewerController;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/viewer/{slug}', [ViewerController::class, 'show']);
 
 // routes protected by sanctum token
 Route::middleware('auth:sanctum')->group(function () {
@@ -22,7 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('check.role:admin|editor')->prefix('admin')->group(function () {
         Route::apiResource('storages', StorageController::class);
         Route::apiResource('bintexes', BintexController::class);
-        Route::apiResource('documents', DocumentController::class)->except(['store']);
+        Route::apiResource('documents', DocumentController::class);
     });
 
     // contoh route untuk editor/editor+admin
