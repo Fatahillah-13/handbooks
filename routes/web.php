@@ -5,13 +5,14 @@ use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('Home');
-});
+})->name('home');
 
-// routes/web.php
-Route::get('/test-gs', function () {
-    $output = [];
-    $returnVar = 0;
+Route::get('/login', function () {
+    return Inertia::render('Login');   // resources/js/Pages/Login.vue
+})->name('login');
 
-    exec('gswin64c -version 2>&1', $output, $returnVar); // atau 'gs -version'
-    dd($output, $returnVar);
-});
+Route::get('/storage/{slug}', function ($slug) {
+    return Inertia::render('StorageView', [  // 👈 HARUS persis "StorageView"
+        'slug' => $slug,
+    ]);
+})->name('storage.show');

@@ -1,9 +1,10 @@
 <template>
-    <div class="home">
-        <div class="home-header">
+    <div class="storage">
+        <div class="storage-header">
             <div class="title-section">
-                <h1>🏠 Storage Library</h1>
-                <p>Select a storage to view its contents:</p>
+                <h1>📁 Storage: {{ storageName || route.params.slug }}</h1>
+                <p>List of bintexes inside this storage:</p>
+
                 <p v-if="user" class="user-info">
                     Logged in as <strong>{{ user.name }}</strong> ({{
                         user.username
@@ -14,41 +15,51 @@
             <button class="logout-btn" @click="logout">Logout</button>
         </div>
 
-        <p v-if="loading">Loading storages...</p>
+        <p>
+            <router-link to="/">← Back to all storages</router-link>
+        </p>
+
+        <p v-if="loading">Loading bintexes...</p>
         <p v-if="error" class="error">{{ error }}</p>
 
-        <div v-if="!loading && !error" class="storage-grid">
-            <PixelFrame v-for="s in storages" :key="s.id">
-                <router-link :to="`/storage/${s.slug}`">
-                    {{ s.name }}
+        <div v-if="!loading && !error" class="bintex-list">
+            <PixelFrame v-for="b in bintexes" :key="b.id">
+                <router-link :to="'/bintex/' + b.slug">
+                    {{ b.name }}
                 </router-link>
             </PixelFrame>
+
+            <p v-if="bintexes.length === 0">
+                This storage has no bintexes yet.
+            </p>
         </div>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import { router } from "@inertiajs/vue3";
 import api from "../api/api";
 import PixelFrame from "../components/PixelFrame.vue";
-import { router } from "@inertiajs/vue3";
 
-const storages = ref([]);
+const route = useRoute();
+
+const bintexes = ref([]);
+const storageName = ref("");
 const loading = ref(true);
 const error = ref(null);
 const user = ref(null);
 
-// Simple auth guard + load data
 onMounted(async () => {
-    // cek token dulu
+    // auth guard sederhana
     const token = localStorage.getItem("token");
     if (!token) {
-        // kalau belum login, lempar ke /login
         router.visit("/login");
         return;
     }
 
-    // ambil user dari localStorage (kalau ada)
+    // load user dari localStorage
     try {
         const savedUser = localStorage.getItem("user");
         if (savedUser) {
@@ -61,49 +72,57 @@ onMounted(async () => {
     loading.value = true;
     error.value = null;
 
+    const slug = route.params.slug;
+
     try {
-        const res = await api.get("/admin/storages");
-        storages.value = res.data;
+        // 1) Ambil semua bintex
+        const res = await api.get("/admin/bintexes");
+
+        // 2) Filter hanya yang storage.slug-nya cocok
+        const allBintexes = res.data;
+        const filtered = allBintexes.filter(
+            (b) => b.storage && b.storage.slug === slug
+        );
+
+        bintexes.value = filtered;
+
+        // 3) Ambil nama storage dari bintex pertama (kalau ada)
+        if (filtered.length > 0 && filtered[0].storage) {
+            storageName.value = filtered[0].storage.name;
+        }
     } catch (e) {
-        console.error("Failed to load storages", e);
+        console.error("Failed to load bintexes", e);
         if (e.response?.status === 401) {
-            error.value =
-                "Tidak bisa memuat data storage (401). Coba login lagi.";
+            error.value = "Tidak bisa memuat bintexes (401). Coba login lagi.";
         } else {
-            error.value = "Terjadi kesalahan saat memuat data storage.";
+            error.value = "Terjadi kesalahan saat memuat bintexes.";
         }
     } finally {
         loading.value = false;
     }
 });
 
-// fungsi logout
+// logout sama seperti di Home
 const logout = async () => {
     try {
-        await api.post("/logout"); // kalau gagal juga tidak masalah
+        await api.post("/logout");
     } catch (e) {
         console.error("Logout API error (ignored)", e);
     }
 
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
-    router.visit("/login"); // atau window.location.href = "/login";
+    router.visit("/login");
 };
 </script>
 
 <style scoped>
-a {
-    text-decoration: none;
-    color: #fafafa;
-}
-
-.home {
+.storage {
     text-align: center;
     padding: 20px;
 }
 
-.home-header {
+.storage-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -136,7 +155,7 @@ a {
     opacity: 0.9;
 }
 
-.storage-grid {
+.bintex-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 20px;
@@ -146,5 +165,10 @@ a {
 .error {
     color: #b91c1c;
     margin-top: 8px;
+}
+
+a {
+    text-decoration: none;
+    color: #ffffff;
 }
 </style>

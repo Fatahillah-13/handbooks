@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Storage extends Model
 {
     protected $fillable = ['name', 'slug', 'description', 'created_by'];
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
     public function bintexes()
     {
         return $this->hasMany(Bintex::class);
