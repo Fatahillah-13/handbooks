@@ -39,14 +39,15 @@
 
 <script setup>
 import { ref } from "vue";
-import api from "../api/api";
-import { router } from "@inertiajs/vue3"; // pakai router-nya Inertia
+import axios from "axios"; // pakai axios langsung untuk /login & /sanctum
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const form = ref({
     username: "",
     password: "",
 });
-
 const loading = ref(false);
 const error = ref(null);
 
@@ -55,14 +56,16 @@ const submit = async () => {
     loading.value = true;
 
     try {
-        const res = await api.post("/login", form.value);
+        // 1) ambil CSRF cookie untuk Sanctum
+        await axios.get("/sanctum/csrf-cookie");
 
-        localStorage.setItem("token", res.data.token);
+        // 2) kirim login (web route, bukan /api)
+        const res = await axios.post("/login", form.value);
+
+        // 3) simpan user kalau mau dipakai di UI
         localStorage.setItem("user", JSON.stringify(res.data.user));
 
-        // setelah login, pindah ke home
-        router.visit("/");
-        // window.location.href = "/";
+        router.push({ name: "home" });
     } catch (e) {
         console.error(e);
         const msg =

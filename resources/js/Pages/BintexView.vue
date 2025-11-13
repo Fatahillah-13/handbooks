@@ -1,3 +1,4 @@
+<!-- resources/js/Pages/BintexView.vue -->
 <template>
     <div class="bintex">
         <div class="bintex-header">
@@ -5,9 +6,9 @@
                 <h1>📚 {{ bintex.name || route.params.slug }}</h1>
                 <p>{{ bintex.description }}</p>
                 <p v-if="user" class="user-info">
-                    Logged in as <strong>{{ user.name }}</strong> ({{
-                        user.username
-                    }})
+                    Logged in as
+                    <strong>{{ user.name }}</strong>
+                    ({{ user.username }})
                 </p>
             </div>
 
@@ -16,14 +17,10 @@
 
         <p>
             <router-link
-                :to="{
-                    name: 'storage',
-                    params: {
-                        slug: bintex.storage?.slug || route.query.storage,
-                    },
-                }"
+                v-if="bintex.storage"
+                :to="{ name: 'storage', params: { slug: bintex.storage.slug } }"
             >
-                ← Back to storage
+                ← Back to Storage
             </router-link>
         </p>
 
@@ -32,15 +29,13 @@
 
         <div v-if="!loading && !error" class="docs">
             <PixelFrame v-for="doc in bintex.documents" :key="doc.id">
-                <!-- pakai slug doc untuk viewer -->
-                <router-link
-                    :to="{ name: 'viewer', params: { id: doc.id } }"
-                >
+                <!-- pakai id dokumen untuk viewer -->
+                <router-link :to="{ name: 'viewer', params: { id: doc.id } }">
                     {{ doc.title }}
                 </router-link>
             </PixelFrame>
 
-            <p v-if="!bintex.documents || bintex.documents.length === 0">
+            <p v-if="!bintex.documents || !bintex.documents.length">
                 This bintex has no documents yet.
             </p>
         </div>
@@ -52,6 +47,7 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api/api";
 import PixelFrame from "../components/PixelFrame.vue";
+import axios from "axios";
 
 const route = useRoute();
 const router = useRouter();
@@ -62,34 +58,20 @@ const error = ref(null);
 const user = ref(null);
 
 onMounted(async () => {
-    // auth guard sederhana
-    const token = localStorage.getItem("token");
-    if (!token) {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
         router.push({ name: "login" });
         return;
     }
-
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-        user.value = JSON.parse(savedUser);
-    }
+    user.value = JSON.parse(userStr);
 
     loading.value = true;
-    error.value = null;
-
     try {
-        // ambil bintex berdasarkan slug di URL
         const res = await api.get(`/admin/bintexes/${route.params.slug}`);
-        bintex.value = res.data; // harus sudah memuat documents di backend
+        bintex.value = res.data;
     } catch (e) {
-        console.error("Failed to load bintex", e);
-        if (e.response?.status === 404) {
-            error.value = "Bintex tidak ditemukan.";
-        } else if (e.response?.status === 401) {
-            error.value = "Tidak bisa memuat bintex (401). Coba login lagi.";
-        } else {
-            error.value = "Terjadi kesalahan saat memuat bintex.";
-        }
+        console.error(e);
+        error.value = "Gagal memuat bintex.";
     } finally {
         loading.value = false;
     }
@@ -97,12 +79,10 @@ onMounted(async () => {
 
 const logout = async () => {
     try {
-        await api.post("/logout");
+        await axios.post("/logout");
     } catch (e) {
-        console.error("Logout API error (ignored)", e);
+        console.error("Logout error (ignored)", e);
     }
-
-    localStorage.removeItem("token");
     localStorage.removeItem("user");
     router.push({ name: "login" });
 };
@@ -110,7 +90,7 @@ const logout = async () => {
 
 <style scoped>
 .bintex {
-    text-align: center;
+    text-align: left;
     padding: 20px;
 }
 
@@ -118,8 +98,6 @@ const logout = async () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
 }
 
 .user-info {
@@ -136,7 +114,6 @@ const logout = async () => {
     background: #ef4444;
     color: white;
     cursor: pointer;
-    white-space: nowrap;
 }
 
 .logout-btn:hover {
@@ -152,7 +129,6 @@ const logout = async () => {
 
 .error {
     color: #b91c1c;
-    margin-top: 8px;
 }
 
 a {

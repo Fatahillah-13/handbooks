@@ -1,8 +1,9 @@
+<!-- resources/js/Pages/Viewer.vue -->
 <template>
     <div class="viewer">
         <div class="viewer-header">
             <div>
-                <h1>📖 {{ title || route.params.slug }}</h1>
+                <h1>📖 {{ title || "Document" }}</h1>
                 <p class="subtitle">Document preview (read-only)</p>
             </div>
 
@@ -19,37 +20,40 @@
         </p>
 
         <p class="back-link">
-            <router-link
-                :to="{
-                    name: 'bintex',
-                    params: {
-                        slug: route.query.bintex || 'peraturan-karyawan',
-                    },
-                }"
-            >
-                ← Back to Bintex
-            </router-link>
+            <router-link :to="{ name: 'home' }"> ← Back to Home </router-link>
         </p>
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import api from "../api/api";
 import Flipbook from "../components/Flipbook.vue";
+import axios from "axios";
 
 const route = useRoute();
+const router = useRouter();
+
 const pages = ref([]);
 const title = ref("");
 const loading = ref(true);
 const error = ref(null);
 
 onMounted(async () => {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
+        router.push({ name: "login" });
+        return;
+    }
+
+    loading.value = true;
+    error.value = null;
+
     try {
         const res = await api.get(`/viewer/${route.params.id}`);
-        pages.value = res.data.pages;
-        title.value = res.data.title;
+        pages.value = res.data.pages || [];
+        title.value = res.data.title || "";
     } catch (e) {
         console.error(e);
         error.value = "Gagal memuat dokumen.";
@@ -57,6 +61,16 @@ onMounted(async () => {
         loading.value = false;
     }
 });
+
+const logout = async () => {
+    try {
+        await axios.post("/logout");
+    } catch (e) {
+        console.error("Logout error (ignored)", e);
+    }
+    localStorage.removeItem("user");
+    router.push({ name: "login" });
+};
 </script>
 
 <style scoped>
@@ -99,9 +113,5 @@ onMounted(async () => {
 
 .back-link {
     margin-top: 16px;
-}
-
-.back-link a {
-    text-decoration: none;
 }
 </style>

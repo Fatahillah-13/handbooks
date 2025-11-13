@@ -1,13 +1,14 @@
+<!-- resources/js/Pages/Home.vue -->
 <template>
     <div class="home">
         <div class="home-header">
-            <div class="title-section">
+            <div>
                 <h1>🏠 Storage Library</h1>
                 <p>Select a storage to view its contents:</p>
                 <p v-if="user" class="user-info">
-                    Logged in as <strong>{{ user.name }}</strong> ({{
-                        user.username
-                    }})
+                    Logged in as
+                    <strong>{{ user.name }}</strong>
+                    ({{ user.username }})
                 </p>
             </div>
 
@@ -19,7 +20,9 @@
 
         <div v-if="!loading && !error" class="storage-grid">
             <PixelFrame v-for="s in storages" :key="s.id">
-                <router-link :to="`/storage/${s.slug}`">
+                <router-link
+                    :to="{ name: 'storage', params: { slug: s.slug } }"
+                >
                     {{ s.name }}
                 </router-link>
             </PixelFrame>
@@ -29,9 +32,10 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import api from "../api/api";
 import PixelFrame from "../components/PixelFrame.vue";
-import { useRouter } from "vue-router";
+import axios from "axios";
 
 const router = useRouter();
 
@@ -40,60 +44,40 @@ const loading = ref(true);
 const error = ref(null);
 const user = ref(null);
 
-// Simple auth guard + load data
 onMounted(async () => {
-    // cek token dulu
-    const token = localStorage.getItem("token");
-    if (!token) {
-        // kalau belum login, lempar ke /login
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
         router.push({ name: "login" });
         return;
     }
+    user.value = JSON.parse(userStr);
 
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-        user.value = JSON.parse(savedUser);
-    }
-
+    loading.value = true;
     try {
         const res = await api.get("/admin/storages");
         storages.value = res.data;
     } catch (e) {
-        console.error("Failed to load storages", e);
-        if (e.response?.status === 401) {
-            error.value =
-                "Tidak bisa memuat data storage (401). Coba login lagi.";
-        } else {
-            error.value = "Terjadi kesalahan saat memuat data storage.";
-        }
+        console.error(e);
+        error.value = "Gagal memuat storages.";
     } finally {
         loading.value = false;
     }
 });
 
-// fungsi logout
 const logout = async () => {
     try {
-        await api.post("/logout"); // kalau gagal juga tidak masalah
+        await axios.post("/logout");
     } catch (e) {
-        console.error("Logout API error (ignored)", e);
+        console.error("Logout error (ignored)", e);
     }
-
-    localStorage.removeItem("token");
     localStorage.removeItem("user");
-
-    router.visit("/login"); // atau window.location.href = "/login";
+    router.push({ name: "login" });
 };
 </script>
 
 <style scoped>
-a {
-    text-decoration: none;
-    color: #fafafa;
-}
-
 .home {
-    text-align: center;
+    text-align: left;
     padding: 20px;
 }
 
@@ -101,18 +85,6 @@ a {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.title-section {
-    text-align: left;
-}
-
-.user-info {
-    margin-top: 4px;
-    font-size: 14px;
-    color: #4b5563;
 }
 
 .logout-btn {
@@ -123,11 +95,16 @@ a {
     background: #ef4444;
     color: white;
     cursor: pointer;
-    white-space: nowrap;
 }
 
 .logout-btn:hover {
     opacity: 0.9;
+}
+
+.user-info {
+    margin-top: 4px;
+    font-size: 14px;
+    color: #4b5563;
 }
 
 .storage-grid {
@@ -139,6 +116,10 @@ a {
 
 .error {
     color: #b91c1c;
-    margin-top: 8px;
+}
+
+a {
+    text-decoration: none;
+    color: #ffffff;
 }
 </style>

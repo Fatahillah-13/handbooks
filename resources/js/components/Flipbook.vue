@@ -1,3 +1,4 @@
+<!-- resources/js/components/Flipbook.vue -->
 <template>
     <div class="flipbook" v-if="pages.length">
         <img :src="pages[current]" class="page" alt="page" />
@@ -29,7 +30,7 @@ const props = defineProps({
 
 const current = ref(0);
 
-// kalau pages berubah (misal dokumen lain), reset ke page 1
+// reset ke halaman pertama jika dokumen berganti
 watch(
     () => props.pages,
     () => {
@@ -50,8 +51,6 @@ function prevPage() {
 .flipbook {
     text-align: center;
     margin-top: 20px;
-    -webkit-user-select: none;
-    user-select: none;
 }
 
 .page {
@@ -66,7 +65,7 @@ function prevPage() {
     margin-top: 10px;
     display: flex;
     justify-content: center;
-    gap: 12px;
     align-items: center;
+    gap: 12px;
 }
 </style>

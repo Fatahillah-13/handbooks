@@ -1,14 +1,14 @@
+<!-- resources/js/Pages/StorageView.vue -->
 <template>
     <div class="storage">
         <div class="storage-header">
-            <div class="title-section">
-                <h1>📁 Storage: {{ storageName || route.params.slug }}</h1>
-                <p>List of bintexes inside this storage:</p>
-
+            <div>
+                <h1>📁 Storage: {{ storage.name || route.params.slug }}</h1>
+                <p>{{ storage.description }}</p>
                 <p v-if="user" class="user-info">
-                    Logged in as <strong>{{ user.name }}</strong> ({{
-                        user.username
-                    }})
+                    Logged in as
+                    <strong>{{ user.name }}</strong>
+                    ({{ user.username }})
                 </p>
             </div>
 
@@ -16,20 +16,22 @@
         </div>
 
         <p>
-            <router-link to="/">← Back to all storages</router-link>
+            <router-link :to="{ name: 'home' }"
+                >← Back to all storages</router-link
+            >
         </p>
 
         <p v-if="loading">Loading bintexes...</p>
         <p v-if="error" class="error">{{ error }}</p>
 
         <div v-if="!loading && !error" class="bintex-list">
-            <PixelFrame v-for="b in bintexes" :key="b.id">
+            <PixelFrame v-for="b in storage.bintexes" :key="b.id">
                 <router-link :to="{ name: 'bintex', params: { slug: b.slug } }">
                     {{ b.name }}
                 </router-link>
             </PixelFrame>
 
-            <p v-if="bintexes.length === 0">
+            <p v-if="!storage.bintexes || !storage.bintexes.length">
                 This storage has no bintexes yet.
             </p>
         </div>
@@ -41,77 +43,51 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api/api";
 import PixelFrame from "../components/PixelFrame.vue";
+import axios from "axios";
 
 const route = useRoute();
 const router = useRouter();
 
-const bintexes = ref([]);
-const storageName = ref("");
+const storage = ref({ bintexes: [] });
 const loading = ref(true);
 const error = ref(null);
 const user = ref(null);
 
 onMounted(async () => {
-    // auth guard sederhana
-    const token = localStorage.getItem("token");
-    if (!token) {
-        router.visit("/login");
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
+        router.push({ name: "login" });
         return;
     }
+    user.value = JSON.parse(userStr);
 
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-        user.value = JSON.parse(savedUser);
-    }
-    const slug = route.params.slug;
-
+    loading.value = true;
     try {
-        // 1) Ambil semua bintex
-        const res = await api.get("/admin/bintexes");
-
-        // 2) Filter hanya yang storage.slug-nya cocok
-        const allBintexes = res.data;
-        const filtered = allBintexes.filter(
-            (b) => b.storage && b.storage.slug === slug
-        );
-
-        bintexes.value = filtered;
-
-        // 3) Ambil nama storage dari bintex pertama (kalau ada)
-        if (filtered.length > 0 && filtered[0].storage) {
-            storageName.value = filtered[0].storage.name;
-        } else {
-            storageName.value = slug;
-        }
+        // asumsinya route api storages sudah pakai slug
+        const res = await api.get(`/admin/storages/${route.params.slug}`);
+        storage.value = res.data;
     } catch (e) {
-        console.error("Failed to load bintexes", e);
-        if (e.response?.status === 401) {
-            error.value = "Tidak bisa memuat bintexes (401). Coba login lagi.";
-        } else {
-            error.value = "Terjadi kesalahan saat memuat bintexes.";
-        }
+        console.error(e);
+        error.value = "Gagal memuat storage.";
     } finally {
         loading.value = false;
     }
 });
 
-// logout sama seperti di Home
 const logout = async () => {
     try {
-        await api.post("/logout");
+        await axios.post("/logout");
     } catch (e) {
-        console.error("Logout API error (ignored)", e);
+        console.error("Logout error (ignored)", e);
     }
-
-    localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.visit("/login");
+    router.push({ name: "login" });
 };
 </script>
 
 <style scoped>
 .storage {
-    text-align: center;
+    text-align: left;
     padding: 20px;
 }
 
@@ -119,18 +95,6 @@ const logout = async () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.title-section {
-    text-align: left;
-}
-
-.user-info {
-    margin-top: 4px;
-    font-size: 14px;
-    color: #4b5563;
 }
 
 .logout-btn {
@@ -141,11 +105,16 @@ const logout = async () => {
     background: #ef4444;
     color: white;
     cursor: pointer;
-    white-space: nowrap;
 }
 
 .logout-btn:hover {
     opacity: 0.9;
+}
+
+.user-info {
+    margin-top: 4px;
+    font-size: 14px;
+    color: #4b5563;
 }
 
 .bintex-list {
@@ -157,11 +126,9 @@ const logout = async () => {
 
 .error {
     color: #b91c1c;
-    margin-top: 8px;
 }
 
 a {
     text-decoration: none;
-    color: #ffffff;
 }
 </style>

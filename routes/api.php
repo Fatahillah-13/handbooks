@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\Admin\Content\BintexController;
 use App\Http\Controllers\Api\Admin\Content\DocumentController;
 use App\Http\Controllers\Api\Public\ViewerController;
 
-Route::post('/login', [AuthController::class, 'login']);
+// Route::post('/login', [AuthController::class, 'login']);
 
 // Route for viewer
     Route::get('/viewer/{document}', [ViewerController::class, 'show']);
