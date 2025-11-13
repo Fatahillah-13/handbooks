@@ -42,6 +42,10 @@ const title = ref("");
 const loading = ref(true);
 const error = ref(null);
 
+// Breadcrumb data
+const bintex = ref(null);
+const storage = ref(null);
+
 onMounted(async () => {
     const userStr = localStorage.getItem("user");
     if (!userStr) {
@@ -56,6 +60,8 @@ onMounted(async () => {
         const res = await api.get(`/viewer/${route.params.id}`);
         pages.value = res.data.pages || [];
         title.value = res.data.title || "";
+        bintex.value = res.data.bintex || null;
+        storage.value = res.data.storage || null;
     } catch (e) {
         console.error(e);
         error.value = "Gagal memuat dokumen.";
@@ -64,10 +70,29 @@ onMounted(async () => {
     }
 });
 
-const breadcrumbItems = computed(() => [
-    { label: "Home", to: { name: "home" } },
-    { label: title.value || "Document" },
-]);
+const breadcrumbItems = computed(() => {
+    const items = [{ label: "Home", to: { name: "home" } }];
+
+    if (storage.value) {
+        items.push({
+            label: storage.value.name,
+            to: { name: "storage", params: { slug: storage.value.slug } },
+        });
+    }
+
+    if (bintex.value) {
+        items.push({
+            label: bintex.value.name,
+            to: { name: "bintex", params: { slug: bintex.value.slug } },
+        });
+    }
+
+    items.push({
+        label: title.value || "Document",
+    });
+
+    return items;
+});
 
 const logout = async () => {
     try {

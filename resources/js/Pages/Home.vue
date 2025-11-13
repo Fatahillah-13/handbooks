@@ -4,7 +4,7 @@
         <Breadcrumb :items="[{ label: 'Home' }]" />
         <div class="home-header">
             <div>
-                <h1>🏠 Storage Library</h1>
+                <h1>🏠 HOME</h1>
                 <p>Select a storage to view its contents:</p>
                 <p v-if="user" class="user-info">
                     Logged in as

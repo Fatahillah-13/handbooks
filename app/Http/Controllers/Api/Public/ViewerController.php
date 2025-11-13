@@ -13,19 +13,26 @@ class ViewerController extends Controller
     // GET /api/viewer/{document}
     public function show(Document $document)
     {
-        // ambil semua halaman dokumen, urut per page_number
+        // load relasi bintex & storage
+        $document->load(['bintex.storage']);
+
         $pages = $document->pages()
             ->orderBy('page_number')
             ->get();
 
-        // setiap page → url API yang akan dipakai Flipbook
-        $pageUrls = $pages->map(function (Page $page) {
-            return route('viewer.page', ['page' => $page->id]);
-        });
+        $pageUrls = $pages->map(fn(Page $page) => route('viewer.page', ['page' => $page->id]));
 
         return response()->json([
             'title' => $document->title,
             'pages' => $pageUrls,
+            'bintex' => $document->bintex ? [
+                'name' => $document->bintex->name,
+                'slug' => $document->bintex->slug,
+            ] : null,
+            'storage' => ($document->bintex && $document->bintex->storage) ? [
+                'name' => $document->bintex->storage->name,
+                'slug' => $document->bintex->storage->slug,
+            ] : null,
         ]);
     }
 
