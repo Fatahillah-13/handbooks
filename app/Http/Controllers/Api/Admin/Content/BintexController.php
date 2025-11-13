@@ -40,7 +40,7 @@ class BintexController extends Controller
      */
     public function show(Bintex $bintex)
     {
-        return $bintex->load('documents');
+        return $bintex->load(['storage', 'documents']);
     }
 
     /**

@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Bintex extends Model
 {
     protected $fillable = ['storage_id', 'name', 'slug', 'description', 'created_by'];
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
     public function storage()
     {
         return $this->belongsTo(Storage::class);

@@ -9,7 +9,11 @@ use App\Http\Controllers\Api\Admin\Content\DocumentController;
 use App\Http\Controllers\Api\Public\ViewerController;
 
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/viewer/{slug}', [ViewerController::class, 'show']);
+
+// Route for viewer
+    Route::get('/viewer/{document}', [ViewerController::class, 'show']);
+    Route::get('/viewer/page/{page}', [ViewerController::class, 'page'])
+     ->name('viewer.page');
 
 // routes protected by sanctum token
 Route::middleware('auth:sanctum')->group(function () {
@@ -26,6 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('bintexes', BintexController::class);
         Route::apiResource('documents', DocumentController::class);
     });
+
+    
 
     // contoh route untuk editor/editor+admin
     // Route::middleware('check.role:admin|editor')->post('/something', ...);

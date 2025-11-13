@@ -10,10 +10,16 @@ const routes = [
     { path: "/", name: "home", component: Home },
     { path: "/storage/:slug", name: "storage", component: StorageView },
     { path: "/bintex/:slug", name: "bintex", component: BintexView },
-    { path: "/viewer/:slug", name: "viewer", component: Viewer },
+    { path: "/viewer/:id", name: "viewer", component: Viewer },
 ];
 
-export default createRouter({
-    history: createWebHistory(),
-    routes,
-});
+// export default createRouter({
+//     history: createWebHistory(),
+//     routes,
+// });
+
+
+const router = createRouter({history:createWebHistory(),routes,})
+
+export default router;
+

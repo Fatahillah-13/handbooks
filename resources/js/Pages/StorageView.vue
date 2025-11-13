@@ -24,7 +24,7 @@
 
         <div v-if="!loading && !error" class="bintex-list">
             <PixelFrame v-for="b in bintexes" :key="b.id">
-                <router-link :to="'/bintex/' + b.slug">
+                <router-link :to="{ name: 'bintex', params: { slug: b.slug } }">
                     {{ b.name }}
                 </router-link>
             </PixelFrame>
@@ -38,12 +38,12 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { router } from "@inertiajs/vue3";
+import { useRoute, useRouter } from "vue-router";
 import api from "../api/api";
 import PixelFrame from "../components/PixelFrame.vue";
 
 const route = useRoute();
+const router = useRouter();
 
 const bintexes = ref([]);
 const storageName = ref("");
@@ -59,19 +59,10 @@ onMounted(async () => {
         return;
     }
 
-    // load user dari localStorage
-    try {
-        const savedUser = localStorage.getItem("user");
-        if (savedUser) {
-            user.value = JSON.parse(savedUser);
-        }
-    } catch (e) {
-        console.warn("Failed to parse saved user", e);
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+        user.value = JSON.parse(savedUser);
     }
-
-    loading.value = true;
-    error.value = null;
-
     const slug = route.params.slug;
 
     try {
@@ -89,6 +80,8 @@ onMounted(async () => {
         // 3) Ambil nama storage dari bintex pertama (kalau ada)
         if (filtered.length > 0 && filtered[0].storage) {
             storageName.value = filtered[0].storage.name;
+        } else {
+            storageName.value = slug;
         }
     } catch (e) {
         console.error("Failed to load bintexes", e);

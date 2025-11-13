@@ -31,7 +31,9 @@
 import { ref, onMounted } from "vue";
 import api from "../api/api";
 import PixelFrame from "../components/PixelFrame.vue";
-import { router } from "@inertiajs/vue3";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const storages = ref([]);
 const loading = ref(true);
@@ -44,22 +46,14 @@ onMounted(async () => {
     const token = localStorage.getItem("token");
     if (!token) {
         // kalau belum login, lempar ke /login
-        router.visit("/login");
+        router.push({ name: "login" });
         return;
     }
 
-    // ambil user dari localStorage (kalau ada)
-    try {
-        const savedUser = localStorage.getItem("user");
-        if (savedUser) {
-            user.value = JSON.parse(savedUser);
-        }
-    } catch (e) {
-        console.warn("Failed to parse saved user", e);
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+        user.value = JSON.parse(savedUser);
     }
-
-    loading.value = true;
-    error.value = null;
 
     try {
         const res = await api.get("/admin/storages");
