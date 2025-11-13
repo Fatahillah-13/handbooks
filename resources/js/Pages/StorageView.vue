@@ -1,6 +1,7 @@
 <!-- resources/js/Pages/StorageView.vue -->
 <template>
     <div class="storage">
+        <Breadcrumb :items="breadcrumbItems" />
         <div class="storage-header">
             <div>
                 <h1>📁 Storage: {{ storage.name || route.params.slug }}</h1>
@@ -39,10 +40,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api/api";
 import PixelFrame from "../components/PixelFrame.vue";
+import Breadcrumb from "../components/Breadcrumb.vue";
 import axios from "axios";
 
 const route = useRoute();
@@ -52,6 +54,11 @@ const storage = ref({ bintexes: [] });
 const loading = ref(true);
 const error = ref(null);
 const user = ref(null);
+
+const breadcrumbItems = computed(() => [
+    { label: "Home", to: { name: "home" } },
+    { label: storage.value.name || route.params.slug },
+]);
 
 onMounted(async () => {
     const userStr = localStorage.getItem("user");

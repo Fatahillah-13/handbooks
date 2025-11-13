@@ -1,6 +1,7 @@
 <!-- resources/js/Pages/Home.vue -->
 <template>
     <div class="home">
+        <Breadcrumb :items="[{ label: 'Home' }]" />
         <div class="home-header">
             <div>
                 <h1>🏠 Storage Library</h1>
@@ -35,6 +36,7 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "../api/api";
 import PixelFrame from "../components/PixelFrame.vue";
+import Breadcrumb from "../components/Breadcrumb.vue";
 import axios from "axios";
 
 const router = useRouter();

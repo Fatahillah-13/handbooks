@@ -1,6 +1,7 @@
 <!-- resources/js/Pages/BintexView.vue -->
 <template>
     <div class="bintex">
+        <Breadcrumb :items="breadcrumbItems" />
         <div class="bintex-header">
             <div>
                 <h1>📚 {{ bintex.name || route.params.slug }}</h1>
@@ -43,10 +44,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api/api";
 import PixelFrame from "../components/PixelFrame.vue";
+import Breadcrumb from "../components/Breadcrumb.vue";
 import axios from "axios";
 
 const route = useRoute();
@@ -75,6 +77,26 @@ onMounted(async () => {
     } finally {
         loading.value = false;
     }
+});
+
+const breadcrumbItems = computed(() => {
+    const items = [{ label: "Home", to: { name: "home" } }];
+
+    if (bintex.value.storage) {
+        items.push({
+            label: bintex.value.storage.name,
+            to: {
+                name: "storage",
+                params: { slug: bintex.value.storage.slug },
+            },
+        });
+    }
+
+    items.push({
+        label: bintex.value.name || route.params.slug,
+    });
+
+    return items;
 });
 
 const logout = async () => {

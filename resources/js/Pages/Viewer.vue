@@ -1,6 +1,7 @@
 <!-- resources/js/Pages/Viewer.vue -->
 <template>
     <div class="viewer">
+        <Breadcrumb :items="breadcrumbItems" />
         <div class="viewer-header">
             <div>
                 <h1>📖 {{ title || "Document" }}</h1>
@@ -26,10 +27,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "../api/api";
 import Flipbook from "../components/Flipbook.vue";
+import Breadcrumb from "../components/Breadcrumb.vue";
 import axios from "axios";
 
 const route = useRoute();
@@ -61,6 +63,11 @@ onMounted(async () => {
         loading.value = false;
     }
 });
+
+const breadcrumbItems = computed(() => [
+    { label: "Home", to: { name: "home" } },
+    { label: title.value || "Document" },
+]);
 
 const logout = async () => {
     try {
