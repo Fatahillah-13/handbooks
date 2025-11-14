@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Document;
 use App\Models\Page;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class ViewerController extends Controller
 {
@@ -20,7 +21,13 @@ class ViewerController extends Controller
             ->orderBy('page_number')
             ->get();
 
-        $pageUrls = $pages->map(fn(Page $page) => route('viewer.page', ['page' => $page->id]));
+        $pageUrls = $pages->map(function (Page $page) {
+            return URL::temporarySignedRoute(
+                'viewer.page',                   // nama route
+                now()->addMinutes(5),            // masa berlaku URL (bisa kamu ubah)
+                ['page' => $page->id]            // parameter route
+            );
+        });
 
         return response()->json([
             'title' => $document->title,
