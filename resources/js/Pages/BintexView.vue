@@ -100,7 +100,15 @@ import useAuth from "../composables/useAuth";
 const route = useRoute();
 const router = useRouter();
 
-const { user, isAdmin, isEditor, canEditContent, isLoggedIn , logout, requireAuth } = useAuth();
+const {
+    user,
+    isAdmin,
+    isEditor,
+    canEditContent,
+    isLoggedIn,
+    logout,
+    requireAuth,
+} = useAuth();
 
 const bintex = ref({ documents: [], storage: null });
 const loading = ref(true);
@@ -137,7 +145,7 @@ const breadcrumbItems = computed(() => {
 });
 
 onMounted(async () => {
-    if(!requireAuth()) return;
+    if (!requireAuth()) return;
 
     loading.value = true;
     try {

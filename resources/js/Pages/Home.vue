@@ -1,6 +1,6 @@
 <template>
     <div class="home">
-        <!-- Breadcrumb opsional -->
+        <!-- Breadcrumb -->
         <Breadcrumb :items="breadcrumbItems" />
 
         <div class="header-row">
@@ -14,7 +14,7 @@
                     }})
                 </p>
 
-                <!-- 🌟 MENU ADMIN/EDITOR -->
+                <!-- MENU ADMIN/EDITOR -->
                 <p v-if="canEditContent" class="manage-link">
                     <router-link :to="{ name: 'storage-manage' }">
                         ⚙️ Go to Storage Management
@@ -22,7 +22,7 @@
                 </p>
             </div>
 
-            <!-- tombol logout -->
+            <!-- logout -->
             <button class="logout-btn" @click="logout">Logout</button>
         </div>
 

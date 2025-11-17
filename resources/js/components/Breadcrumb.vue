@@ -6,7 +6,6 @@
                 :key="index"
                 class="breadcrumb-item"
             >
-                <!-- item terakhir / tanpa link = aktif -->
                 <span
                     v-if="!item.to || index === items.length - 1"
                     class="crumb active"
