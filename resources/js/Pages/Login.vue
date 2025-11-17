@@ -41,8 +41,10 @@
 import { ref } from "vue";
 import axios from "axios"; // pakai axios langsung untuk /login & /sanctum
 import { useRouter } from "vue-router";
+import useAuth from "../composables/useAuth";
 
 const router = useRouter();
+const { setUser } = useAuth();
 
 const form = ref({
     username: "",
@@ -62,8 +64,8 @@ const submit = async () => {
         // 2) kirim login (web route, bukan /api)
         const res = await axios.post("/login", form.value);
 
-        // 3) simpan user kalau mau dipakai di UI
-        localStorage.setItem("user", JSON.stringify(res.data.user));
+        // pakai helper global
+        setUser(res.data.user);
 
         router.push({ name: "home" });
     } catch (e) {
