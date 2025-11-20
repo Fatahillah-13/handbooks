@@ -67,6 +67,16 @@
                     />
                 </div>
 
+                <div class="form-row">
+                    <label>
+                        <input
+                            type="checkbox"
+                            v-model="uploadForm.is_confidential"
+                        />
+                        Mark as Confidential
+                    </label>
+                </div>
+
                 <button type="submit" :disabled="uploadLoading">
                     <span v-if="uploadLoading">Uploading...</span>
                     <span v-else>Upload</span>
@@ -118,6 +128,7 @@ const error = ref(null);
 const uploadForm = ref({
     title: "",
     file: null,
+    is_confidential: false,
 });
 const uploadLoading = ref(false);
 const uploadError = ref(null);
@@ -193,6 +204,10 @@ const submitUpload = async () => {
         formData.append("bintex_id", bintex.value.id);
         formData.append("title", uploadForm.value.title);
         formData.append("file", uploadForm.value.file);
+        formData.append(
+            "is_confidential",
+            uploadForm.value.is_confidential ? "1" : "0"
+        );
 
         const res = await api.post("/admin/documents", formData);
 

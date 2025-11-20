@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Document extends Model
 {
-    protected $fillable = ['bintex_id', 'title', 'filename_original', 'file_path_private', 'page_count', 'is_published', 'allow_download', 'created_by'];
+    protected $fillable = ['bintex_id', 'title', 'filename_original', 'file_path_private', 'page_count', 'is_published', 'allow_download', 'is_confidential', 'created_by'];
 
     public function bintex()
     {

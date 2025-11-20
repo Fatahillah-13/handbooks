@@ -26,7 +26,8 @@ class DocumentController extends Controller
         $request->validate([
             'bintex_id' => 'required|exists:bintexes,id',
             'title' => 'required|string|max:255',
-            'file' => 'required|mimes:pdf|max:20480', // max 20MB
+            'file' => 'required|mimes:pdf|max:20480',
+            'is_confidential' => 'nullable',
         ]);
 
         $file = $request->file('file');
@@ -45,6 +46,7 @@ class DocumentController extends Controller
             'page_count' => 0,
             'is_published' => false,
             'allow_download' => false,
+            'is_confidential' => $request->boolean('is_confidential', false),
             'created_by' => $request->user()->id,
         ]);
 

@@ -9,6 +9,7 @@ use Illuminate\Queue\{InteractsWithQueue, SerializesModels};
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Storage;
 use Imagick;
+use ImagickException;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -49,33 +50,95 @@ class ConvertPdfToImages implements ShouldQueue
             $pageCount = $imagick->getNumberImages();
             $pageNum = 1;
 
+            $watermarkBase = null;
+            if ($doc->is_confidential) {
+                $stampPath = storage_path('app/private/watermarks/confidential.png');
+                if (file_exists($stampPath)) {
+                    try {
+                        $watermarkBase = new Imagick($stampPath);
+                    } catch (ImagickException $e) {
+                        Log::error('Failed to load watermark image: ' . $e->getMessage());
+                    }
+                } else {
+                    Log::warning("Watermark image not found at: {$stampPath}");
+                }
+            }
+
             foreach ($imagick as $page) {
                 $page->setImageFormat('jpeg');
                 $page->setImageCompressionQuality(85);
+
+                // 🧾 Apply watermark hanya jika confidential & watermark berhasil dimuat
+                if ($doc->is_confidential && $watermarkBase instanceof Imagick) {
+                    // clone supaya tiap halaman punya instance sendiri
+                    $watermark = clone $watermarkBase;
+
+                    $pageWidth  = $page->getImageWidth();
+                    $pageHeight = $page->getImageHeight();
+
+                    // Resize watermark ke ~50% lebar halaman (sesuaikan suka-suka)
+                    $targetWidth = (int) ($pageWidth * 0.5);
+
+                    $watermark->resizeImage(
+                        $targetWidth,
+                        0, // height auto (keep aspect ratio)
+                        Imagick::FILTER_LANCZOS,
+                        1
+                    );
+
+                    // Posisi di tengah
+                    $x = (int) (($pageWidth - $watermark->getImageWidth()) / 2);
+                    $y = (int) (($pageHeight - $watermark->getImageHeight()) / 2);
+
+                    // Tempelkan watermark di atas halaman
+                    $page->compositeImage(
+                        $watermark,
+                        Imagick::COMPOSITE_OVER,
+                        $x,
+                        $y
+                    );
+
+                    $watermark->clear();
+                    $watermark->destroy();
+                }
+
                 $imageBlob = $page->getImageBlob();
                 $filename = $outputDir . "/page_{$pageNum}.jpg";
+
                 Storage::put($filename, $imageBlob);
-                if (!Storage::exists($filename)) {
-                    Log::error("Failed to save page {$pageNum}");
+                if (! Storage::exists($filename)) {
+                    Log::error("Failed to save page {$pageNum} for document {$doc->id}");
+                    $pageNum++;
                     continue;
                 }
+
                 Page::create([
                     'document_id' => $doc->id,
                     'page_number' => $pageNum,
-                    'image_path' => $filename
+                    'image_path'  => $filename,
                 ]);
+
                 $pageNum++;
             }
 
             $doc->update([
-                'page_count' => $pageCount,
-                'is_published' => true
+                'page_count'   => $pageCount,
+                'is_published' => true,
             ]);
 
             // Bersihkan memory
             $imagick->clear();
+            $imagick->destroy();
+
+            if ($watermarkBase instanceof Imagick) {
+                $watermarkBase->clear();
+                $watermarkBase->destroy();
+            }
         } catch (Exception $e) {
             Log::error('PDF convert error: ' . $e->getMessage());
+            $doc->update([
+                'is_published' => false,
+            ]);
         }
     }
 }
