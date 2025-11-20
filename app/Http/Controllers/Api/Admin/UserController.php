@@ -30,21 +30,15 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username',
             'email' => 'nullable|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8',
-            'role' => 'required|string|exists:roles,name' // accept role name
+            'password' => 'required|string|min:8|confirmed',
+            'role_id' => 'required|integer|in:1,2,3' // accept role name
         ]);
 
-        $role = Role::where('name', $data['role'])->first();
+        $data['password'] = Hash::make($data['password']);
 
-        $user = User::create([
-            'name' => $data['name'],
-            'username' => $data['username'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role_id' => $role->id
-        ]);
+        $user = User::create($data);
 
-        return response()->json(['user' => $user->load('role')], 201);
+        return response()->json($user, 201);
     }
 
     /**
@@ -65,19 +59,16 @@ class UserController extends Controller
             'username' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($user->id)],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
-            'role' => 'nullable|string|exists:roles,name'
+            'role_id' => 'nullable|integer|in:1,2,3'
         ]);
 
-        if (isset($data['role'])) {
-            $role = Role::where('name', $data['role'])->first();
-            $user->role_id = $role->id;
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']); // jangan overwrite dengan null
         }
-        if (isset($data['name'])) $user->name = $data['name'];
-        if (isset($data['username'])) $user->username = $data['username'];
-        if (isset($data['email'])) $user->email = $data['email'];
-        if (!empty($data['password'])) $user->password = Hash::make($data['password']);
 
-        $user->save();
+        $user->update($data);
 
         return response()->json(['user' => $user->load('role')]);
     }

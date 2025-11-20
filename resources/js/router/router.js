@@ -6,6 +6,7 @@ import Viewer from "../Pages/Viewer.vue";
 import Login from "../Pages/Login.vue";
 import StorageManage from "../Pages/StorageManage.vue";
 import BintexManage from "../Pages/BintexManage.vue";
+import UsersManage from "../Pages/UsersManage.vue";
 
 const routes = [
     { path: "/login", name: "login", component: Login },
@@ -23,6 +24,7 @@ const routes = [
         name: "bintex-manage",
         component: BintexManage,
     },
+    { path: "/admin/users", name: "users-manage", component: UsersManage },
 ];
 
 const router = createRouter({ history: createWebHistory(), routes });
