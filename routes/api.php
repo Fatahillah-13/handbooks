@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Admin\Content\StorageController;
 use App\Http\Controllers\Api\Admin\Content\BintexController;
 use App\Http\Controllers\Api\Admin\Content\DocumentController;
 use App\Http\Controllers\Api\Public\ViewerController;
+use App\Http\Controllers\Api\Admin\AuditLogController;
 
 // Route::post('/login', [AuthController::class, 'login']);
 
@@ -22,10 +23,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin routes
     Route::middleware('check.role:admin')->prefix('admin')->group(function () {
         Route::apiResource('users', UserController::class);
+        Route::get('/audit-logs', [AuditLogController::class, 'index']);
         // nanti tambahkan admin endpoints lain (storages, bintex, etc)
     });
 
-    Route::middleware('check.role:admin|editor')->prefix('admin')->group(function () {
+    Route::middleware('check.role:admin|editor|viewer')->prefix('admin')->group(function () {
         Route::apiResource('storages', StorageController::class);
         Route::apiResource('bintexes', BintexController::class);
         Route::apiResource('documents', DocumentController::class);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin\Content;
 
 use App\Http\Controllers\Controller;
 use App\Models\Storage;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -31,6 +32,10 @@ class StorageController extends Controller
         $data['created_by'] = $request->user()->id;
         $storage = Storage::create($data);
 
+        AuditLog::record('storage.created', $storage, [
+            'name' => $storage->name,
+        ]);
+
         return response()->json($storage, 201);
     }
 
@@ -54,6 +59,9 @@ class StorageController extends Controller
 
         if (isset($data['name'])) $data['slug'] = Str::slug($data['name']);
         $storage->update($data);
+        AuditLog::record('storage.updated', $storage, [
+            'name' => $storage->name,
+        ]);
         return $storage;
     }
 
@@ -63,6 +71,9 @@ class StorageController extends Controller
     public function destroy(Storage $storage)
     {
         $storage->delete();
+        AuditLog::record('storage.deleted', $storage, [
+            'name' => $storage->name,
+        ]);
         return response()->json(['message' => 'Storage deleted']);
     }
 }

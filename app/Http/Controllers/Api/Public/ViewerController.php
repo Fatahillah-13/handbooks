@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Document;
 use App\Models\Page;
+use App\Models\AuditLog;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
@@ -16,6 +17,12 @@ class ViewerController extends Controller
     {
         // load relasi bintex & storage
         $document->load(['bintex.storage']);
+
+        AuditLog::record('document.viewed', $document, [
+            'title'   => $document->title,
+            'bintex'  => $document->bintex?->name,
+            'storage' => $document->bintex?->storage?->name,
+        ]);
 
         $pages = $document->pages()
             ->orderBy('page_number')

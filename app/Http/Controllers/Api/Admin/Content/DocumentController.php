@@ -7,6 +7,7 @@ use App\Models\{Document, Page};
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Jobs\ConvertPdfToImages;
+use App\Models\AuditLog;
 
 class DocumentController extends Controller
 {
@@ -53,6 +54,11 @@ class DocumentController extends Controller
         // Dispatch job konversi PDF → gambar
         ConvertPdfToImages::dispatch($document);
 
+        AuditLog::record('document.created', $document, [
+            'title' => $document->title,
+            'bintex' => $document->bintex?->name,
+        ]);
+
         return response()->json([
             'message' => 'Upload berhasil, file sedang dikonversi...',
             'document' => $document
@@ -79,6 +85,11 @@ class DocumentController extends Controller
         ]);
 
         $document->update($data);
+        AuditLog::record('document.updated', $document, [
+            'title' => $document->title,
+            'is_published' => $document->is_published,
+            'allow_download' => $document->allow_download,
+        ]);
         return $document;
     }
 
@@ -88,6 +99,9 @@ class DocumentController extends Controller
     public function destroy(Document $document)
     {
         $document->delete();
+        AuditLog::record('document.deleted', $document, [
+            'title' => $document->title,
+        ]);
         return response()->json(['message' => 'Document deleted']);
     }
 }

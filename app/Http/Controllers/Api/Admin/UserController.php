@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Models\AuditLog;
 
 class UserController extends Controller
 {
@@ -37,6 +38,11 @@ class UserController extends Controller
         $data['password'] = Hash::make($data['password']);
 
         $user = User::create($data);
+
+        AuditLog::record('user.created', $user, [
+            'username' => $user->username,
+            'role_id' => $user->role_id,
+        ]);
 
         return response()->json($user, 201);
     }

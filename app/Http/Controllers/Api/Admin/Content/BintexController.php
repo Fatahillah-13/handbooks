@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Bintex;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use App\Models\AuditLog;
 
 class BintexController extends Controller
 {
@@ -32,6 +33,10 @@ class BintexController extends Controller
         $data['created_by'] = $request->user()->id;
         $bintex = Bintex::create($data);
 
+        AuditLog::record('bintex.created', $bintex, [
+            'name' => $bintex->name,
+        ]);
+
         return response()->json($bintex, 201);
     }
 
@@ -54,6 +59,9 @@ class BintexController extends Controller
         ]);
         if (isset($data['name'])) $data['slug'] = Str::slug($data['name']);
         $bintex->update($data);
+        AuditLog::record('bintex.updated', $bintex, [
+            'name' => $bintex->name,
+        ]);
         return $bintex;
     }
 
@@ -63,6 +71,9 @@ class BintexController extends Controller
     public function destroy(Bintex $bintex)
     {
         $bintex->delete();
+        AuditLog::record('bintex.deleted', $bintex, [
+            'name' => $bintex->name,
+        ]);
         return response()->json(['message' => 'Bintex deleted']);
     }
 }
