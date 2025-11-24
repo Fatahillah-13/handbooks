@@ -14,7 +14,7 @@
         <p v-if="loading">Loading pages...</p>
         <p v-if="error" class="error">{{ error }}</p>
 
-        <Flipbook v-if="!loading && !error && pages.length" :pages="pages" />
+        <FlipbookRealistic v-if="pages.length" :pages="pages" />
 
         <p v-if="!loading && !error && !pages.length">
             This document has no pages to display.
@@ -33,6 +33,8 @@ import api from "../api/api";
 import Flipbook from "../components/Flipbook.vue";
 import Breadcrumb from "../components/Breadcrumb.vue";
 import axios from "axios";
+// import Flipbook from "../components/Flipbook.vue";
+import FlipbookRealistic from "../components/FlipbookRealistic.vue";
 
 const route = useRoute();
 const router = useRouter();
