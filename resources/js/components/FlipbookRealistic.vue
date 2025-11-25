@@ -18,7 +18,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
-import { PageFlip } from "page-flip"; // 👈 dari npm
+import { PageFlip } from "page-flip";
 import PixelButton from "./PixelButton.vue";
 
 const props = defineProps({
@@ -33,43 +33,42 @@ const pageCount = ref(0);
 const initFlip = () => {
     if (!bookRef.value || !props.pages.length) return;
 
-    // Kalau sebelumnya sudah ada instance, destroy dulu
+    // destroy instance lama jika ada
     if (flip.value) {
         flip.value.destroy();
         flip.value = null;
     }
 
-    // Buat instance baru
+    // 🚩 ukuran & layout di sini kita kecilkan + paksa 2 halaman
     flip.value = new PageFlip(bookRef.value, {
-        width: 800, // base width halaman (px) → sesuaikan
-        height: 600, // base height halaman (px) → sesuaikan
-        size: "stretch", // "fixed" atau "stretch"
+        width: 600, // lebar buku (2 halaman gabungan)
+        height: 600, // tinggi buku
+        size: "fixed", // stretch sesuai container
         minWidth: 300,
-        maxWidth: 1200,
-        minHeight: 400,
-        maxHeight: 1000,
+        maxWidth: 800,
+        minHeight: 300,
+        maxHeight: 500,
+
         maxShadowOpacity: 0.5,
-        showCover: true, // cover terlihat sendiri di depan
-        mobileScrollSupport: true, // tetap bisa scroll di HP
+        showCover: true, // ⬅️ langsung 2 halaman, tanpa cover tunggal
+        usePortrait: false, // ⬅️ jangan auto switch ke 1 halaman
+        mobileScrollSupport: true,
         flippingTime: 800, // durasi animasi (ms)
     });
 
     // Muat halaman dari array URL gambar
     flip.value.loadFromImages(props.pages);
 
-    // Set info page count
     pageCount.value = flip.value.getPageCount();
     currentPage.value = flip.value.getCurrentPageIndex();
 
-    // Event saat flip halaman
     flip.value.on("flip", (e) => {
-        currentPage.value = e.data; // e.data = index halaman (0-based)
+        currentPage.value = e.data; // index 0-based
     });
 };
 
 const nextPage = () => {
     if (!flip.value) return;
-    // animasi next halaman
     flip.value.flipNext("bottom");
 };
 
@@ -82,7 +81,6 @@ onMounted(() => {
     initFlip();
 });
 
-// Jika dokumen berganti (pages berubah), re-init
 watch(
     () => props.pages,
     () => {
@@ -121,11 +119,10 @@ onBeforeUnmount(() => {
 /* container untuk StPageFlip */
 .book-container {
     width: 100%;
-    max-width: 900px;
-    height: 600px;
+    max-width: 700px; /* ⬅️ buku lebih kecil */
+    height: 450px; /* ⬅️ tinggi juga diperkecil */
     margin: 0 auto;
-    /* background optional biar kelihatan area bukunya */
-    background: #f3f4f6;
+    background: transparent;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 </style>
